@@ -1,0 +1,59 @@
+# Values for the official hashicorp/vault dependency.
+vault:
+  global:
+    # HTTP is for this trusted local cluster only. Do not expose it publicly.
+    tlsDisable: true
+
+  injector:
+    enabled: false
+
+  csi:
+    enabled: false
+
+  server:
+    enabled: true
+    dev:
+      enabled: false
+    standalone:
+      enabled: true
+    ha:
+      enabled: false
+
+    # One server on one OrbStack node does not need anti-affinity.
+    affinity: ""
+
+    dataStorage:
+      enabled: true
+      size: 1Gi
+      # Use the cluster's default StorageClass.
+      storageClass: null
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+
+    service:
+      type: ClusterIP
+    ingress:
+      enabled: false
+
+    # A sealed Vault must remain running until you unseal it.
+    livenessProbe:
+      enabled: false
+
+    # This local setup does not use Kubernetes auth or service registration.
+    authDelegator:
+      enabled: false
+    serviceAccount:
+      serviceDiscovery:
+        enabled: false
+
+  ui:
+    enabled: true
+    serviceType: ClusterIP

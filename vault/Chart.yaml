@@ -1,0 +1,11 @@
+apiVersion: v2
+name: vault
+description: Single-node Vault for a local OrbStack Kubernetes cluster.
+type: application
+version: 0.1.0
+appVersion: "2.0.4"
+kubeVersion: ">=1.29.0-0"
+dependencies:
+  - name: vault
+    version: "0.34.1"
+    repository: https://helm.releases.hashicorp.com
