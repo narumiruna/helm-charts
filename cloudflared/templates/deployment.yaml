@@ -50,6 +50,11 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /etc/cloudflared
+            {{- if .Values.originCAConfigMap }}
+            - name: origin-ca
+              mountPath: /etc/cloudflared/certs
+              readOnly: true
+            {{- end }}
       volumes:
         - name: data
           {{- if .Values.persistence.enabled }}
@@ -58,3 +63,8 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- if .Values.originCAConfigMap }}
+        - name: origin-ca
+          configMap:
+            name: {{ .Values.originCAConfigMap | quote }}
+        {{- end }}

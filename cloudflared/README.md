@@ -39,6 +39,7 @@ Configure the tunnel's published application routes in Cloudflare. Use an origin
 | `image.tag` | `latest` | Image tag. Pin a release tag for repeatable deployments. |
 | `image.pullPolicy` | `Always` | Container image pull policy. |
 | `existingSecret` | `cloudflared-token` | Secret that contains `TUNNEL_TOKEN`. |
+| `originCAConfigMap` | `argocd-origin-ca` | Existing ConfigMap mounted read-only at `/etc/cloudflared/certs`. Set to `""` to omit the mount. |
 | `persistence.enabled` | `true` | Create and mount a PVC. Use `emptyDir` when `false`. |
 | `persistence.size` | `1Gi` | PVC capacity. |
 | `persistence.storageClass` | `null` | Use the default StorageClass. Set a name to select one, or `""` to use a pre-provisioned volume. |
@@ -52,6 +53,39 @@ With persistence disabled, data is lost when the Pod is removed. Disabling persi
 helm upgrade --install cloudflared ./cloudflared --namespace cloudflared \
   --set persistence.enabled=false
 ```
+
+## Verify the Argo CD origin certificate
+
+The default values require an `argocd-origin-ca` ConfigMap in the release namespace. Create it before deployment. Export only the public certificate; do not copy the private key or the full Argo CD Secret.
+
+```sh
+kubectl -n argocd get secret argocd-secret \
+  -o jsonpath='{.data.tls\.crt}' | base64 --decode > argocd-ca.pem
+
+openssl x509 -in argocd-ca.pem -noout -subject -issuer -dates
+
+kubectl -n cloudflared create configmap argocd-origin-ca \
+  --from-file=argocd-ca.pem=argocd-ca.pem \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+For the remotely managed Argo CD route, set these TLS options in Cloudflare:
+
+- Service: `https://argocd-server.argocd.svc.cluster.local:443`.
+- Origin Server Name: `argocd-server.argocd.svc.cluster.local`.
+- CA Pool: `/etc/cloudflared/certs/argocd-ca.pem`.
+- No TLS Verify: disabled.
+
+The CA Pool path is inside the connector container, not on the Mac. Mounting the file does not set the route CA Pool automatically.
+
+When Argo CD replaces its certificate, update the ConfigMap with the commands above and restart the connector to reload its trust settings:
+
+```sh
+kubectl -n cloudflared rollout restart deployment/cloudflared
+kubectl -n cloudflared rollout status deployment/cloudflared
+```
+
+For GitOps deployments, commit and push chart changes to the Application source. Do not patch the Deployment or run a separate Helm upgrade; automated sync can revert those changes.
 
 ## Validate
 

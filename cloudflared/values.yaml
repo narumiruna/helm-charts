@@ -6,6 +6,9 @@ image:
 # This Secret must exist in the release namespace and contain TUNNEL_TOKEN.
 existingSecret: cloudflared-token
 
+# Existing ConfigMap with public origin CA certificates. Set to "" to omit the mount.
+originCAConfigMap: argocd-origin-ca
+
 persistence:
   enabled: false
 
