@@ -1,0 +1,15 @@
+image:
+  repository: cloudflare/cloudflared
+  tag: latest
+  pullPolicy: Always
+
+# This Secret must exist in the release namespace and contain TUNNEL_TOKEN.
+existingSecret: cloudflared-token
+
+persistence:
+  enabled: true
+  size: 1Gi
+  # null uses the default StorageClass; "" requires a pre-provisioned volume.
+  storageClass: null
+
+resources: {}

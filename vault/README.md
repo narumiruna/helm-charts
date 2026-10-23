@@ -20,6 +20,7 @@ Run from the repository root with Helm 3.6+ and Kubernetes 1.29+. Enable Kuberne
 kubectl config get-contexts
 kubectl --context orbstack get storageclass
 
+helm repo add hashicorp https://helm.releases.hashicorp.com
 helm dependency build ./vault
 helm upgrade --install vault ./vault \
   --kube-context orbstack --namespace vault --create-namespace
@@ -47,7 +48,7 @@ Open <http://127.0.0.1:8200/ui/>.
 3. Unseal Vault with the key, then sign in with the initial root token.
 4. Configure a normal authentication method and policies. Use the root token only for initial setup and recovery, not for applications.
 
-One key is enough to unseal this local instance. Anyone with that key and access to its storage can recover the data; if the key is lost, the data cannot be recovered. Do not initialize again when you reuse an existing data PVC.
+One key is enough to unseal this local instance. Anyone with that key and access to its storage can recover the data; if Vault is sealed and the key is lost, its data cannot be recovered. Do not initialize again when you reuse an existing data PVC.
 
 After unseal, the Pod becomes ready:
 
@@ -86,6 +87,7 @@ The StatefulSet retention policy keeps its data PVC after uninstall. Reinstall w
 ## Validate without a cluster
 
 ```sh
+helm repo add hashicorp https://helm.releases.hashicorp.com
 helm dependency build ./vault
 helm lint ./vault --strict
 helm template vault ./vault --namespace vault
